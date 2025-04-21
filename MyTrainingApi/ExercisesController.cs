@@ -40,7 +40,13 @@ namespace MyTrainingApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateExercise(int id, [FromBody] Exercise exercise)
         {
-            var existing = await _context.Exercises.FindAsync(id);
+             if (exercise == null)
+                return BadRequest("Invalid exercise data.");
+                
+                var existing = await _context.Exercises
+                .Include(e => e.Workout) // Load related Workout
+                .FirstOrDefaultAsync(e => e.Id == id);
+
             if (existing == null || existing.Workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
@@ -60,7 +66,15 @@ namespace MyTrainingApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExercise(int id)
         {
-            var exercise = await _context.Exercises.FindAsync(id);
+             var exercise = await _context.Exercises
+                .Include(e => e.Workout)
+                .FirstOrDefaultAsync(e => e.Id == id);
+            
+            if (exercise == null)
+                return NotFound("Exercise not found.");
+
+            // Explicitly check if Workout exists
+            var workout = await _context.Workouts.FindAsync(exercise.WorkoutId);
             if (exercise == null || exercise.Workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
