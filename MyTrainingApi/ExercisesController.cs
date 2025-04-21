@@ -28,7 +28,7 @@ namespace MyTrainingApi.Controllers
                 return BadRequest("Sets, reps, and weight cannot be negative.");
 
             var workout = await _context.Workouts.FindAsync(exercise.WorkoutId);
-            if (workout == null || workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (workout == null || workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound("Workout not found.");
 
             _context.Exercises.Add(exercise);
@@ -36,11 +36,12 @@ namespace MyTrainingApi.Controllers
             return Ok(exercise);
         }
 
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateExercise(int id, [FromBody] Exercise exercise)
         {
             var existing = await _context.Exercises.FindAsync(id);
-            if (existing == null || existing.Workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (existing == null || existing.Workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
             if (string.IsNullOrEmpty(exercise.Name))
@@ -60,7 +61,7 @@ namespace MyTrainingApi.Controllers
         public async Task<IActionResult> DeleteExercise(int id)
         {
             var exercise = await _context.Exercises.FindAsync(id);
-            if (exercise == null || exercise.Workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (exercise == null || exercise.Workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
             _context.Exercises.Remove(exercise);

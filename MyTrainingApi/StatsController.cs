@@ -23,7 +23,7 @@ namespace MyTrainingApi.Controllers
         [HttpGet("workouts")]
         public async Task<IActionResult> GetWorkouts([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] string exerciseName)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
                 IQueryable<Workout> query = _context.Workouts
                     .Where(w => w.UserId == userId)
                     .Include(w => w.Exercises);
@@ -41,7 +41,7 @@ namespace MyTrainingApi.Controllers
         [HttpGet("statistics")]
         public async Task<IActionResult> GetStatistics()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var workouts = await _context.Workouts
                 .Where(w => w.UserId == userId)
                 .Include(w => w.Exercises)
@@ -62,12 +62,12 @@ namespace MyTrainingApi.Controllers
         [HttpGet("progress")]
         public async Task<IActionResult> GetProgressData([FromQuery] string exerciseName)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var exercises = await _context.Exercises
                 .Include(e => e.Workout)
-                .Where(e => e.Workout.UserId == userId && e.Name == exerciseName)
-                .OrderBy(e => e.Workout.Date)
-                .Select(e => new { e.Workout.Date, e.Weight })
+                .Where(e => e.Workout!.UserId == userId && e.Name == exerciseName)
+                .OrderBy(e => e.Workout!.Date)
+                .Select(e => new { e.Workout!.Date, e.Weight })
                 .ToListAsync();
 
             return Ok(exercises);

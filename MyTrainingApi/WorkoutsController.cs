@@ -25,7 +25,7 @@ namespace MyTrainingApi.Controllers
             if (string.IsNullOrEmpty(workout.Name))
                 return BadRequest("Workout name cannot be empty.");
 
-            workout.UserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            workout.UserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             workout.Date = DateTime.Now;
             _context.Workouts.Add(workout);
             await _context.SaveChangesAsync();
@@ -35,7 +35,7 @@ namespace MyTrainingApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetWorkouts()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var workouts = await _context.Workouts
                 .Where(w => w.UserId == userId)
                 .Include(w => w.Exercises)
@@ -47,7 +47,7 @@ namespace MyTrainingApi.Controllers
         public async Task<IActionResult> UpdateWorkout(int id, [FromBody] Workout workout)
         {
             var existing = await _context.Workouts.FindAsync(id);
-            if (existing == null || existing.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (existing == null || existing.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
             existing.Name = workout.Name;
@@ -59,7 +59,7 @@ namespace MyTrainingApi.Controllers
         public async Task<IActionResult> DeleteWorkout(int id)
         {
             var workout = await _context.Workouts.FindAsync(id);
-            if (workout == null || workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (workout == null || workout.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
             _context.Workouts.Remove(workout);

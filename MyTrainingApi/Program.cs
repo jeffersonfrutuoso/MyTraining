@@ -1,44 +1,58 @@
 using Microsoft.EntityFrameworkCore;
-using MyTrainingApi.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+   using MyTrainingApi.Data;
+   using Microsoft.AspNetCore.Authentication.JwtBearer;
+   using Microsoft.IdentityModel.Tokens;
+   using System.Text;
+   using DotNetEnv;
 
-var builder = WebApplication.CreateBuilder(args);
+   // Load .env file
+   Env.Load();
 
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+   var builder = WebApplication.CreateBuilder(args);
 
-// Configure JWT Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-        };
-    });
+   // Add services to the container.
+   builder.Services.AddControllers();
+   builder.Services.AddDbContext<AppDbContext>(options =>
+       options.UseMySql(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"),
+           ServerVersion.AutoDetect(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"))));
 
-builder.Services.AddAuthorization();
+   // Configure JWT Authentication
+   var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
+   if (string.IsNullOrEmpty(jwtKey))
+   {
+       throw new InvalidOperationException("JWT Key is missing in environment variables.");
+   }
 
-var app = builder.Build();
-if(!app.Environment.IsDevelopment()){
-    app.UseHttpsRedirection();
-}
-// Configure the HTTP request pipeline.
-app.UseAuthentication();
-app.UseAuthorization();
+   builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+       .AddJwtBearer(options =>
+       {
+           options.TokenValidationParameters = new TokenValidationParameters
+           {
+               ValidateIssuer = true,
+               ValidateAudience = true,
+               ValidateLifetime = true,
+               ValidateIssuerSigningKey = true,
+               ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
+               ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
+               IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+           };
+       });
 
-app.MapGet("/", () => "api is running!" );
-app.MapControllers();
+   builder.Services.AddAuthorization();
 
-app.Run();
+   var app = builder.Build();
+
+   // Configure the HTTP request pipeline.
+   if (!app.Environment.IsDevelopment())
+   {
+       app.UseHttpsRedirection();
+   }
+   app.UseAuthentication();
+   app.UseAuthorization();
+
+   // Health check endpoint
+   app.MapGet("/", () => "API is running!");
+
+   app.MapControllers();
+
+   app.Run();

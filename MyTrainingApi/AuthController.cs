@@ -53,12 +53,19 @@ namespace MyTrainingApi.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username)
             };
+                var keyString = Environment.GetEnvironmentVariable("JWT_KEY");
+                var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
+                var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                if (string.IsNullOrEmpty(keyString) || string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
+                throw new Exception("JWT_KEY, JWT_ISSUER ou JWT_AUDIENCE não definidos no .env");
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
                 claims: claims,
                 expires: DateTime.Now.AddDays(1),
                 signingCredentials: creds);

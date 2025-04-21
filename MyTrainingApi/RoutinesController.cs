@@ -25,7 +25,7 @@ namespace MyTrainingApi.Controllers
             if (string.IsNullOrEmpty(routine.Name))
                 return BadRequest("Routine name cannot be empty.");
 
-            routine.UserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            routine.UserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             _context.Routines.Add(routine);
             await _context.SaveChangesAsync();
             return Ok(routine);
@@ -34,7 +34,7 @@ namespace MyTrainingApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetRoutines()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var routines = await _context.Routines
                 .Where(r => r.UserId == userId)
                 .Include(r => r.Exercises)
@@ -46,7 +46,7 @@ namespace MyTrainingApi.Controllers
         public async Task<IActionResult> UpdateRoutine(int id, [FromBody] Routine routine)
         {
             var existing = await _context.Routines.FindAsync(id);
-            if (existing == null || existing.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (existing == null || existing.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
             existing.Name = routine.Name;
@@ -58,7 +58,7 @@ namespace MyTrainingApi.Controllers
         public async Task<IActionResult> DeleteRoutine(int id)
         {
             var routine = await _context.Routines.FindAsync(id);
-            if (routine == null || routine.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (routine == null || routine.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
             _context.Routines.Remove(routine);
@@ -72,7 +72,7 @@ namespace MyTrainingApi.Controllers
             var routine = await _context.Routines
                 .Include(r => r.Exercises)
                 .FirstOrDefaultAsync(r => r.Id == id);
-            if (routine == null || routine.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
+            if (routine == null || routine.UserId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value))
                 return NotFound();
 
             var workout = new Workout
